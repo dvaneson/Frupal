@@ -1,4 +1,5 @@
 import qualified Service as S
+import Json (Json(..))
 
 import System.FilePath (takeDirectory)
 
@@ -113,6 +114,24 @@ writeEnergy =
     write "../energy/data" (show . energy)
 
 
+handleError :: IO ()
+handleError = putStr $ show $ JObject [("error", JBool True)]
+
+
+printState :: Maybe Hero -> IO ()
+printState Nothing = handleError
+printState (Just hero) =
+    let (r,c) = position hero 
+        e = energy hero
+        json = JObject [ ("position", JArray [ JNumber $ fromIntegral r
+                                             , JNumber $ fromIntegral c
+                                             ])
+                       , ("item", JString "None")
+                       , ("energy", JNumber $ fromIntegral e)
+                       ]
+    in putStr $ show json
+
+
 main :: IO ()
 main = S.createService $ \args -> do
     gameState <- S.currentData parseGameState
@@ -120,4 +139,4 @@ main = S.createService $ \args -> do
     writePosition maybeHero
     writeItems gameState
     writeEnergy maybeHero
-    putStr "ok"
+    printState maybeHero

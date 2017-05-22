@@ -1,4 +1,5 @@
 import qualified Service as S
+import Json (Json(..))
 import System.Process (readProcess)
 import System.FilePath (takeDirectory)
 import System.Environment (getArgs)
@@ -20,11 +21,11 @@ toOperation args = do
         _         -> Nothing
 
 
-parseResult :: String -> (S.Args -> Maybe (a, S.Args)) -> Maybe (a, S.Args)
+parseResult :: String -> (S.Args -> Maybe (a, S.Args)) -> Maybe a
 parseResult args f = do
     (result, args) <- S.parseString $ S.splitOn ' ' args
     case result of
-        "ok" -> f args
+        "ok" -> f args >>= \(a,_) -> Just a
         _    -> Nothing
 
 
@@ -34,19 +35,52 @@ readResult file args = do
     readProcess (dir ++ "/../" ++ file) args ""
 
 
+readItem :: Maybe S.Position -> IO String
+readItem Nothing = return ""
+readItem (Just (r,c)) = 
+    readResult "items/main" [ "lookup", show r, show c ]
+
+
+processOutput :: Maybe S.Position -> Maybe String -> Maybe S.Energy -> Maybe String
+processOutput maybePos maybeItem maybeEnergy = do
+    (row, column) <- maybePos
+    item     <- maybeItem
+    energy   <- maybeEnergy
+    return $ show $ JObject [ ("position", JArray [ JNumber $ fromIntegral row
+                                                  , JNumber $ fromIntegral column
+                                                  ])
+                            , ("item", JString item)
+                            , ("energy", JNumber $ fromIntegral energy) 
+                            ]
+
+
+handleError :: IO ()
+handleError = putStr $ show $ JObject [("error", JBool True)]
+
+
 handleMove :: S.Row -> S.Column -> IO ()
 handleMove r c = do
-    pos <- readResult "position/main" [ "move", show r, show c ]
-    print $ parseResult pos S.parsePosition
-    return ()
+    posResult <- readResult "position/main" [ "move", show r, show c ]
+    let maybePos = parseResult posResult S.parsePosition
+    itemResult <- readItem maybePos
+    let maybeItem = parseResult itemResult S.parseString
+    energyResult <- readResult "energy/main" [ "sub", "1" ]
+    let maybeEnergy = parseResult energyResult S.parseInt
+    case processOutput maybePos maybeItem maybeEnergy of
+        Nothing -> handleError
+        Just x  -> putStr x
+                        
 
 
 handleNewGame :: IO ()
-handleNewGame = return ()
+handleNewGame = do
+    result <- readResult "new-game/main" []
+    putStr result
+    
 
 
 apply :: Maybe Operation -> IO ()
-apply Nothing = return ()
+apply Nothing = handleError
 apply (Just op) =
     case op of
         Move r c -> handleMove r c
