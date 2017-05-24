@@ -1,3 +1,3 @@
 #!/bin/bash
-ghc -O2 ../code/items.hs ../code/service.hs 
-mv ../code/items ../items/main
+g++ -o main -g ../code/items.c
+mv main ../items/main
