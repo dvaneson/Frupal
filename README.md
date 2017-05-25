@@ -22,3 +22,8 @@ git pull origin master
 ```
 
 Assuming you have no merge conflicts, this will give you the latest code from the master branch
+
+## Information for each service:
+
+  ### [Energy](https://github.com/dvaneson/Frupal/blob/master/energy/ENERGY_README.md)
+
