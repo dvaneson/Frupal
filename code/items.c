@@ -14,7 +14,7 @@
 
 int main(int argc, char* argv[])
 {
-	char	data_file[] = "data";
+	char	data_file[] = "../items/data";
 	FILE*	fp;
 	int	x_file, y_file, x_arg, y_arg;
 	char	line[100];
