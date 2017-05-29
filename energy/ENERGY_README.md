@@ -1,5 +1,5 @@
 ## Frupal - Energy feature
-*README outdated* (5/28/17)
+_*README outdated*_ (5/28/17)
 At a minimum, download the data (a .txt file) and the executable (main) 
 
 ```bash
